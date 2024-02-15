@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -61,7 +62,7 @@ func resourceSingleSCRAMSecretAssociationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating Single MSK SCRAM Secret Association (%s): %s", clusterARN, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", clusterARN, secretARN))
+	d.SetId(fmt.Sprintf("%s#%s", clusterARN, secretARN))
 
 	return append(diags, resourceSingleSCRAMSecretAssociationRead(ctx, d, meta)...)
 }
@@ -70,8 +71,14 @@ func resourceSingleSCRAMSecretAssociationRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	clusterARN := d.Get("cluster_arn").(string)
-	secretARN := d.Get("secret_arn").(string)
+	clusterARNAndSecretARN := strings.Split(d.Id(), "#")
+
+	if len(clusterARNAndSecretARN) != 2 {
+		return sdkdiag.AppendErrorf(diags, "Invalid MSK Single SCRAM Secret Association id (%s). It should contain the clusterARN and secretARN divided by a single #", d.Id())
+	}
+
+	clusterARN := clusterARNAndSecretARN[0]
+	secretARN := clusterARNAndSecretARN[1]
 
 	id, err := findSCRAMSecretsByClusterARNAndSecretARN(ctx, conn, clusterARN, secretARN)
 
@@ -137,7 +144,7 @@ func findSCRAMSecretsByClusterARNAndSecretARN(ctx context.Context, conn *kafka.C
 		}
 
 		if slices.Contains(page.SecretArnList, secretARN) {
-			id := fmt.Sprintf("%s:%s", clusterARN, secretARN)
+			id := fmt.Sprintf("%s#%s", clusterARN, secretARN)
 			return &id, nil
 		}
 	}
