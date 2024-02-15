@@ -1,11 +1,36 @@
-<!-- markdownlint-disable first-line-h1 no-inline-html -->
-<a href="https://terraform.io">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/terraform_logo_dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset=".github/terraform_logo_light.svg">
-    <img src=".github/terraform_logo_light.svg" alt="Terraform logo" title="Terraform" align="right" height="50">
-  </picture>
-</a>
+# Fork of Terraform Provider for AWS
+
+Implementing support for aws_msk_scram_secret_association that work in multiple different terraform modules that are currently not available in official AWS terraform Provider
+
+# New Resources
+
+### MSK
+
+- aws_msk_single_scram_secret_association (allows to assign a single secret to a cluster)
+
+## Usage
+```hcl
+terraform {
+  required_providers {
+    awscust = {
+      version = "x.x.x"
+      source  = "jandillenkofer/aws"
+    }
+  }
+}
+provider "awscust" {
+    region = "eu-west-1"
+    profile = "my-account"
+}
+
+# cluster and secrets must be defined...
+
+resource "aws_msk_single_scram_secret_association" "secret-association" {
+  cluster_arn = data.aws_msk_cluster.cluster.arn
+  secret_arn  = aws_secretsmanager_secret.secret.arn
+  provider    = awscust
+}
+```
 
 # Terraform AWS Provider
 
