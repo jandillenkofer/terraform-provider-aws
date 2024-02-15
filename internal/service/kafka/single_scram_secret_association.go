@@ -58,7 +58,7 @@ func resourceSingleSCRAMSecretAssociationCreate(ctx context.Context, d *schema.R
 	clusterARN := d.Get("cluster_arn").(string)
 	secretARN := d.Get("secret_arn").(string)
 
-	if err := associateSRAMSecret(ctx, conn, clusterARN, secretARN); err != nil {
+	if err := associateSCRAMSecret(ctx, conn, clusterARN, secretARN); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Single MSK SCRAM Secret Association (%s): %s", clusterARN, err)
 	}
 
@@ -110,7 +110,7 @@ func resourceSingleSCRAMSecretAssociationDelete(ctx context.Context, d *schema.R
 	clusterARN := d.Get("cluster_arn").(string)
 	secretARN := d.Get("secret_arn").(string)
 
-	err := disassociateSRAMSecret(ctx, conn, clusterARN, secretARN)
+	err := disassociateSCRAMSecret(ctx, conn, clusterARN, secretARN)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -152,7 +152,7 @@ func findSCRAMSecretsByClusterARNAndSecretARN(ctx context.Context, conn *kafka.C
 	return nil, nil
 }
 
-func associateSRAMSecret(ctx context.Context, conn *kafka.Client, clusterARN string, secretARN string) error {
+func associateSCRAMSecret(ctx context.Context, conn *kafka.Client, clusterARN string, secretARN string) error {
 	input := &kafka.BatchAssociateScramSecretInput{
 		ClusterArn:    aws.String(clusterARN),
 		SecretArnList: []string{secretARN},
@@ -171,7 +171,7 @@ func associateSRAMSecret(ctx context.Context, conn *kafka.Client, clusterARN str
 	return nil
 }
 
-func disassociateSRAMSecret(ctx context.Context, conn *kafka.Client, clusterARN string, secretARN string) error {
+func disassociateSCRAMSecret(ctx context.Context, conn *kafka.Client, clusterARN string, secretARN string) error {
 	input := &kafka.BatchDisassociateScramSecretInput{
 		ClusterArn:    aws.String(clusterARN),
 		SecretArnList: []string{secretARN},
