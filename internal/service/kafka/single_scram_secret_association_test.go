@@ -174,7 +174,7 @@ func testAccCheckSingleScramSecretAssociationExists(ctx context.Context, n strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
 
-		_, err := tfkafka.FindSCRAMSecretsByClusterARN(ctx, conn, rs.Primary.ID)
+		_, err := tfkafka.FindSCRAMSecretsByClusterARN(ctx, conn, rs.Primary.Attributes["cluster_arn"])
 
 		return err
 	}
