@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -158,7 +159,21 @@ func associateSCRAMSecret(ctx context.Context, conn *kafka.Client, clusterARN st
 		SecretArnList: []string{secretARN},
 	}
 
-	output, err := conn.BatchAssociateScramSecret(ctx, input)
+	retries := 0
+	var output *kafka.BatchAssociateScramSecretOutput
+	var err error
+	for retries < 5 {
+		output, err = conn.BatchAssociateScramSecret(ctx, input)
+		if err != nil {
+			return err
+		}
+		if len(output.UnprocessedScramSecrets) > 0 && aws.ToString(output.UnprocessedScramSecrets[0].ErrorCode) == "InvalidSecretArn" {
+			time.Sleep(5 * time.Second)
+			retries += 1
+			continue
+		}
+		break
+	}
 
 	if err == nil {
 		err = unprocessedScramSecretsError(output.UnprocessedScramSecrets, false)
